@@ -20,6 +20,3 @@ This folder is a consolidated export of MotifMamba-related code from the local `
 - Before running on a new machine, update env vars in launcher scripts (e.g. `ROOT`, `PY`, `PRETRAINED_DIR`, `PILE_ROOT`, `OUT_DIR`).
 - Large datasets/checkpoints are intentionally not included.
 
-## Source Snapshot
-Date:
-- 2026-05-07
