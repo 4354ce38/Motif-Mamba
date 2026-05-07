@@ -1,0 +1,52 @@
+# 1) 安装miniconda(这一部分有问题建议问AI)
+mkdir -p /XXX
+cd /XXX
+
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+bash Miniconda3-latest-Linux-x86_64.sh -b -p /XXX/miniconda3
+
+source /XXX/miniconda3/etc/profile.d/conda.sh
+
+conda init bash
+source ~/.bashrc
+
+# 2) 创建环境并进入
+conda create -n motifmamba python=3.10 -y
+conda activate motifmamba
+
+# 3) 装需要的库
+conda install -y -c conda-forge gcc_linux-64=11 gxx_linux-64=11 sysroot_linux-64=2.17 ninja cmake
+export CC=$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc
+export CXX=$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++
+export CUDAHOSTCXX=$CXX
+export CUDA_HOME=/usr/local/cuda
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}
+export CXXFLAGS="-O3 -std=c++17"
+export TORCH_CUDA_ARCH_LIST="8.0"
+export CAUSAL_CONV1D_FORCE_BUILD=TRUE
+pip install -U pip setuptools wheel numpy packaging
+pip install --no-build-isolation --no-binary :all: causal-conv1d==1.6.1
+pip install --no-build-isolation --no-binary :all: mamba-ssm
+pip install -U hatchling
+pip install -U einops transformers safetensors
+pip install huggingface_hub
+
+# 4) 编译motifmamba(进入mamba-main文件夹下)
+cd /XXX/mamba-main
+rm -f selective_scan_cuda*.so
+rm -rf build dist *.egg-info
+export CC=$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc
+export CXX=$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++
+export CUDAHOSTCXX=$CXX
+export CUDA_HOME=/usr/local/cuda
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}
+export TORCH_CUDA_ARCH_LIST=8.0
+export MAX_JOBS=8
+python setup.py build_ext --inplace
+
+# 5) 如何使用
+#加载mamba参数并训练可用train_kpq_motif_pile_lm.py，
+#脚本参考run_train_mamba130m_motif2_fulltrain_10M_seq2048_cuda0.sh
